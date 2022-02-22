@@ -23,23 +23,6 @@
         <!--         <TextBox></TextBox> -->
         <!--     </Grid>  -->
         <!-- </DataTemplate> -->
-        <Style TargetType="TextBox">
-            <Style.Triggers>
-                <Trigger Property="IsEnabled" Value="false">
-                    <Setter Property="Validation.ErrorTemplate">
-                        <Setter.Value>
-                            <ControlTemplate>
-                                <DockPanel>
-                                    <Border BorderBrush="Gray" BorderThickness="0">
-                                        <AdornedElementPlaceholder/>
-                                    </Border>
-                                </DockPanel>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
     </Window.Resources>
     <DockPanel DataContext="{StaticResource Config}">
         <StackPanel DockPanel.Dock="Top">
@@ -88,15 +71,24 @@
                             </Binding.ValidationRules>
                         </Binding>
                     </TextBox.Text>
-                    <TextBox.IsEnabled>
-                        <Binding Path="IsPortEnabled" />
-                    </TextBox.IsEnabled>
+                    <TextBox.Style>
+                        <Style TargetType="TextBox">
+                            <Setter Property="IsEnabled" Value="True"></Setter>
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding Path=Running}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <MultiDataTrigger.Setters>
+                                        <Setter Property="IsEnabled" Value="False"></Setter>
+                                    </MultiDataTrigger.Setters>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBox.Style>
                 </TextBox>
                 <Label Grid.Row="1" Grid.Column="0">Address</Label>
                 <TextBox x:Name="AddressTextBox" Grid.Row="1" Grid.Column="1">
-                    <TextBox.IsEnabled>
-                        <Binding Path="IsHostEnabled" />
-                    </TextBox.IsEnabled>
                     <TextBox.Text>
                         <Binding Path="IpAddress"
                                  Mode="TwoWay"
@@ -107,14 +99,56 @@
                                 </Binding.ValidationRules>
                         </Binding>
                     </TextBox.Text>
+                    <TextBox.Style>
+                        <Style TargetType="TextBox">
+                            <Setter Property="IsEnabled" Value="False"></Setter>
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding Path=Running}" Value="False" />
+                                        <Condition Binding="{Binding Path=Mode}" Value="SEND" />
+                                    </MultiDataTrigger.Conditions>
+                                    <MultiDataTrigger.Setters>
+                                        <Setter Property="IsEnabled" Value="True"></Setter>
+                                    </MultiDataTrigger.Setters>
+                                </MultiDataTrigger>
+                                <Trigger Property="IsEnabled" Value="false">
+                                    <Setter Property="Validation.ErrorTemplate">
+                                        <Setter.Value>
+                                            <ControlTemplate>
+                                                <DockPanel>
+                                                    <Border BorderBrush="Gray" BorderThickness="0">
+                                                        <AdornedElementPlaceholder/>
+                                                    </Border>
+                                                </DockPanel>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBox.Style>
                 </TextBox>
             </Grid>
         </StackPanel>
         <Button DockPanel.Dock="Bottom" Click="OnStart">Start</Button>
         <TextBox PreviewKeyDown="OnKeyDown" PreviewKeyUp="OnKeyUp">
-            <TextBox.IsEnabled>
-                <Binding Path="IsInputEnabled" />
-            </TextBox.IsEnabled>
+            <TextBox.Style>
+                <Style TargetType="TextBox">
+                    <Setter Property="IsEnabled" Value="False"></Setter>
+                    <Style.Triggers>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding Path=Running}" Value="True" />
+                                <Condition Binding="{Binding Path=Mode}" Value="SEND" />
+                            </MultiDataTrigger.Conditions>
+                            <MultiDataTrigger.Setters>
+                                <Setter Property="IsEnabled" Value="True"></Setter>
+                            </MultiDataTrigger.Setters>
+                        </MultiDataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBox.Style>
         </TextBox>
     </DockPanel>
 </Window>

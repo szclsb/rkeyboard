@@ -27,9 +27,6 @@ namespace rkeyboard
             {
                 _running = value;
                 OnPropertyChanged();
-                OnPropertyChanged("IsPortEnabled");
-                OnPropertyChanged("IsHostEnabled");
-                OnPropertyChanged("IsInputEnabled");
             }
         }
         
@@ -42,8 +39,6 @@ namespace rkeyboard
             {
                 _mode = value;
                 OnPropertyChanged();
-                OnPropertyChanged("IsHostEnabled");
-                OnPropertyChanged("IsInputEnabled");
             }
         }
 
@@ -70,11 +65,5 @@ namespace rkeyboard
                 OnPropertyChanged();
             }
         }
-
-        public bool IsPortEnabled => !_running;
-
-        public bool IsHostEnabled => !_running && Mode == rkeyboard.Mode.SEND;
-
-        public bool IsInputEnabled => _running && Mode == rkeyboard.Mode.SEND;
     }
 }
