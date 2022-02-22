@@ -43,55 +43,72 @@
     </Window.Resources>
     <DockPanel DataContext="{StaticResource Config}">
         <StackPanel DockPanel.Dock="Top">
-        <StackPanel  Orientation="Horizontal">
-            <RadioButton x:Name="ReceiveButton" Click="OnSetReceive" IsChecked="True">Receive</RadioButton>
-            <RadioButton x:Name="SendButton" Click="OnSetSend">Send</RadioButton>
-        </StackPanel>
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                <ColumnDefinition Width="*"></ColumnDefinition>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"></RowDefinition>
-                <RowDefinition Height="Auto"></RowDefinition>
-                <RowDefinition Height="*"></RowDefinition>
-            </Grid.RowDefinitions>
-            <Label Grid.Row="0" Grid.Column="0">Port</Label>
-            <TextBox Grid.Row="0" Grid.Column="1">
-                <TextBox.Text>
-                    <Binding Path="Port"
-                             Mode="TwoWay"
-                             UpdateSourceTrigger="PropertyChanged"
-                             NotifyOnValidationError="True">
-                        <Binding.ValidationRules>
-                            <local:RangeValidation Min="1"
-                                                   Max="65535"
-                                                   ValidatesOnTargetUpdated="True" />
-                        </Binding.ValidationRules>
-                    </Binding>
-                </TextBox.Text>
-                <TextBox.IsEnabled>
-                    <Binding Path="IsPortEnabled" />
-                </TextBox.IsEnabled>
-            </TextBox>
-            <Label Grid.Row="1" Grid.Column="0">Address</Label>
-            <TextBox x:Name="AddressTextBox" Grid.Row="1" Grid.Column="1">
-                <TextBox.IsEnabled>
-                    <Binding Path="IsHostEnabled" />
-                </TextBox.IsEnabled>
-                <TextBox.Text>
-                    <Binding Path="IpAddress"
-                             Mode="TwoWay"
-                             UpdateSourceTrigger="PropertyChanged"
-                             NotifyOnValidationError="True">
+            <DockPanel Margin="5">
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                    <RadioButton x:Name="ReceiveButton" Click="OnSetReceive" IsChecked="True">Receive</RadioButton>
+                    <RadioButton x:Name="SendButton" Click="OnSetSend">Send</RadioButton>
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Right" FlowDirection="RightToLeft" Orientation="Horizontal">
+                    <Ellipse Width="10" Height="10">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="Red"></Setter>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Path=Running}" Value="True">
+                                        <Setter Property="Fill" Value="Green"></Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                </StackPanel>
+            </DockPanel>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="*"></RowDefinition>
+                </Grid.RowDefinitions>
+                <Label Grid.Row="0" Grid.Column="0">Port</Label>
+                <TextBox Grid.Row="0" Grid.Column="1">
+                    <TextBox.Text>
+                        <Binding Path="Port"
+                                 Mode="TwoWay"
+                                 UpdateSourceTrigger="PropertyChanged"
+                                 NotifyOnValidationError="True">
                             <Binding.ValidationRules>
-                                <local:IpAddressValidation ValidatesOnTargetUpdated="True" />
+                                <local:RangeValidation Min="1"
+                                                       Max="65535"
+                                                       ValidatesOnTargetUpdated="True" />
                             </Binding.ValidationRules>
-                    </Binding>
-                </TextBox.Text>
-            </TextBox>
-        </Grid>
+                        </Binding>
+                    </TextBox.Text>
+                    <TextBox.IsEnabled>
+                        <Binding Path="IsPortEnabled" />
+                    </TextBox.IsEnabled>
+                </TextBox>
+                <Label Grid.Row="1" Grid.Column="0">Address</Label>
+                <TextBox x:Name="AddressTextBox" Grid.Row="1" Grid.Column="1">
+                    <TextBox.IsEnabled>
+                        <Binding Path="IsHostEnabled" />
+                    </TextBox.IsEnabled>
+                    <TextBox.Text>
+                        <Binding Path="IpAddress"
+                                 Mode="TwoWay"
+                                 UpdateSourceTrigger="PropertyChanged"
+                                 NotifyOnValidationError="True">
+                                <Binding.ValidationRules>
+                                    <local:IpAddressValidation ValidatesOnTargetUpdated="True" />
+                                </Binding.ValidationRules>
+                        </Binding>
+                    </TextBox.Text>
+                </TextBox>
+            </Grid>
         </StackPanel>
         <Button DockPanel.Dock="Bottom" Click="OnStart">Start</Button>
         <TextBox PreviewKeyDown="OnKeyDown" PreviewKeyUp="OnKeyUp">
