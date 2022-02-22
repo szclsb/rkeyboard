@@ -1,4 +1,5 @@
-﻿using System.Net.Sockets;
+﻿using System;
+using System.Net.Sockets;
 using System.Text;
 
 namespace rkeyboard
@@ -22,10 +23,10 @@ namespace rkeyboard
             _client.Close();
         }
 
-        public void Send(string message)
+        public void Send(int key)
         {
-            var content = Encoding.ASCII.GetBytes(message);
-            _client.SendAsync(content, content.Length);
+            var bytes = BitConverter.GetBytes(key);
+            _client.SendAsync(bytes, bytes.Length);
         }
     }
 }

@@ -5,8 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:rkeyboard"
         mc:Ignorable="d"
-        Title="MainWindow" Height="150" Width="250"
-        Initialized="OnInitialized">
+        Title="MainWindow" Height="200" Width="250"
+        Initialized="OnInitialized"
+        Closed="OnClosed">
     <Window.Resources>
         <!-- <DataTemplate x:Key="receiveContent"> -->
         <!--     <Grid> -->
@@ -40,13 +41,13 @@
             </Style.Triggers>
         </Style>
     </Window.Resources>
-    <DockPanel>
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+    <DockPanel DataContext="{StaticResource Config}">
+        <StackPanel DockPanel.Dock="Top">
+        <StackPanel  Orientation="Horizontal">
             <RadioButton x:Name="ReceiveButton" Click="OnSetReceive" IsChecked="True">Receive</RadioButton>
             <RadioButton x:Name="SendButton" Click="OnSetSend">Send</RadioButton>
         </StackPanel>
-        <Button DockPanel.Dock="Bottom" Click="OnStart">Start</Button>
-        <Grid DataContext="{StaticResource Config}">
+        <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"></ColumnDefinition>
                 <ColumnDefinition Width="*"></ColumnDefinition>
@@ -70,11 +71,14 @@
                         </Binding.ValidationRules>
                     </Binding>
                 </TextBox.Text>
+                <TextBox.IsEnabled>
+                    <Binding Path="IsPortEnabled" />
+                </TextBox.IsEnabled>
             </TextBox>
             <Label Grid.Row="1" Grid.Column="0">Address</Label>
             <TextBox x:Name="AddressTextBox" Grid.Row="1" Grid.Column="1">
                 <TextBox.IsEnabled>
-                    <Binding ElementName="SendButton" Path="IsChecked"></Binding>
+                    <Binding Path="IsHostEnabled" />
                 </TextBox.IsEnabled>
                 <TextBox.Text>
                     <Binding Path="IpAddress"
@@ -88,5 +92,12 @@
                 </TextBox.Text>
             </TextBox>
         </Grid>
+        </StackPanel>
+        <Button DockPanel.Dock="Bottom" Click="OnStart">Start</Button>
+        <TextBox PreviewKeyDown="OnKeyDown" PreviewKeyUp="OnKeyUp">
+            <TextBox.IsEnabled>
+                <Binding Path="IsInputEnabled" />
+            </TextBox.IsEnabled>
+        </TextBox>
     </DockPanel>
 </Window>

@@ -11,7 +11,7 @@ namespace rkeyboard
         private volatile UdpClient _client;
         private Thread _thread;
 
-        public void Listen(int port, Action<string> onReceive)
+        public void Listen(int port, Action<int> onReceive)
         {
             _thread = new Thread(() =>
             {
@@ -21,14 +21,14 @@ namespace rkeyboard
                 {
                     while (true)
                     {
-                        var content = _client.Receive(ref ep);
-                        if (content == null || content.Length == 0)
+                        var bytes = _client.Receive(ref ep);
+                        if (bytes == null || bytes.Length == 0)
                         {
                             return;
                         }
 
-                        var str = Encoding.ASCII.GetString(content);
-                        onReceive?.Invoke(str);
+                        var key = BitConverter.ToInt32(bytes, 0);
+                        onReceive?.Invoke(key);
                     }
                 }
                 catch (SocketException e)

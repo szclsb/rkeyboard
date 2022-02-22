@@ -57,18 +57,16 @@ namespace rkeyboard
                 {
                     //FIXME
                     _sender.Connect(_configuration.IpAddress, _configuration.Port.Value);
-                    _sender.Send("test");
-                    _sender.Disconnect();
                     break;
                 }
                 case Mode.RECEIVE:
                 {
                     //FIXME
-                    _receiver.Listen(_configuration.Port.Value, s =>
+                    _receiver.Listen(_configuration.Port.Value, key =>
                     {
                         Dispatcher?.Invoke(() =>
                         {
-                            MessageBox.Show(s);
+                            MessageBox.Show(key.ToString());
                         });
                     });
                     break;
@@ -78,6 +76,40 @@ namespace rkeyboard
                     throw new ArgumentException("Invalid mode");
                 }
             }
+            _configuration.Running = true;
+        }
+
+        private void OnClosed(object? sender, EventArgs e)
+        {
+            switch (_configuration.Mode)
+            {
+                case Mode.SEND:
+                {
+                    _sender.Disconnect();
+                    break;
+                }
+                case Mode.RECEIVE:
+                {
+                    _receiver.Stop();
+                    break;
+                }
+                default:
+                {
+                    throw new ArgumentException("Invalid mode");
+                }
+            }
+        }
+
+        private void OnKeyDown(object sender, KeyEventArgs e)
+        {
+            _sender.Send((int) e.Key);
+            e.Handled = true;
+        }
+
+        private void OnKeyUp(object sender, KeyEventArgs e)
+        {
+            _sender.Send(-(int) e.Key);
+            e.Handled = true;
         }
     }
 }
