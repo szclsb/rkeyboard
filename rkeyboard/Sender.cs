@@ -2,29 +2,23 @@
 using System.Net.Sockets;
 using System.Text;
 
-namespace rkeyboard
-{
-    public class Sender
-    {
+namespace rkeyboard {
+    public class Sender {
         private UdpClient _client;
 
-        public Sender()
-        {
+        public Sender() {
             _client = new UdpClient();
         }
 
-        public void Connect(string host, int port)
-        {
+        public void Connect(string host, int port) {
             _client.Connect(host, port);
         }
 
-        public void Disconnect()
-        {
+        public void Disconnect() {
             _client.Close();
         }
 
-        public void Send(int key)
-        {
+        public void Send(int key) {
             var bytes = BitConverter.GetBytes(key);
             _client.SendAsync(bytes, bytes.Length);
         }

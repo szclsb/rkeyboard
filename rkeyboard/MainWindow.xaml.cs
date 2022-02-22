@@ -14,102 +14,97 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace rkeyboard
-{
+namespace rkeyboard {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
-    {
+    public partial class MainWindow : Window {
         private Configuration _configuration;
         private Receiver _receiver;
         private Sender _sender;
-        
-        public MainWindow()
-        {
+
+        public MainWindow() {
             InitializeComponent();
             _receiver = new Receiver();
             _sender = new Sender();
         }
 
-        private void OnInitialized(object? sender, EventArgs e)
-        {
+        private void OnInitialized(object? sender, EventArgs e) {
             _configuration = FindResource("Config") as Configuration;
             if (_configuration == null) throw new Exception("Unable to load resource Config");
             _configuration.Mode = Mode.RECEIVE;
         }
 
-        private void OnSetSend(object sender, RoutedEventArgs e)
-        {
+        private void OnSetSend(object sender, RoutedEventArgs e) {
             _configuration.Mode = Mode.SEND;
         }
-        
-        private void OnSetReceive(object sender, RoutedEventArgs e)
-        {
+
+        private void OnSetReceive(object sender, RoutedEventArgs e) {
             _configuration.Mode = Mode.RECEIVE;
         }
 
-        private void OnStart(object sender, RoutedEventArgs e)
-        {
-            switch (_configuration.Mode)
-            {
-                case Mode.SEND:
-                {
-                    //FIXME
+        private void OnBtnPressed(object sender, RoutedEventArgs e) {
+            if (!_configuration.Running) {
+                Start();
+            }
+            else {
+                Stop();
+            }
+        }
+
+        private void OnClosed(object? sender, EventArgs e) {
+            if (_configuration.Running) {
+                Stop();
+            }
+        }
+
+        private void OnKeyDown(object sender, KeyEventArgs e) {
+            _sender.Send((int)e.Key);
+            e.Handled = true;
+        }
+
+        private void OnKeyUp(object sender, KeyEventArgs e) {
+            _sender.Send(-(int)e.Key);
+            e.Handled = true;
+        }
+
+        private void Start() {
+            switch (_configuration.Mode) {
+                case Mode.SEND: {
                     _sender.Connect(_configuration.IpAddress, _configuration.Port.Value);
                     break;
                 }
-                case Mode.RECEIVE:
-                {
-                    //FIXME
-                    _receiver.Listen(_configuration.Port.Value, key =>
-                    {
-                        Dispatcher?.Invoke(() =>
-                        {
-                            MessageBox.Show(key.ToString());
-                        });
+                case Mode.RECEIVE: {
+                    _receiver.Listen(_configuration.Port.Value, key => {
+                        //FIXME
+                        MessageBox.Show(key.ToString());
                     });
                     break;
                 }
-                default:
-                {
+                default: {
                     throw new ArgumentException("Invalid mode");
                 }
             }
+
             _configuration.Running = true;
         }
 
-        private void OnClosed(object? sender, EventArgs e)
-        {
-            switch (_configuration.Mode)
-            {
-                case Mode.SEND:
-                {
+        private void Stop() {
+            switch (_configuration.Mode) {
+                case Mode.SEND: {
                     _sender.Disconnect();
                     break;
                 }
-                case Mode.RECEIVE:
-                {
+                case Mode.RECEIVE: {
                     _receiver.Stop();
                     break;
                 }
-                default:
-                {
+                default: {
                     throw new ArgumentException("Invalid mode");
                 }
             }
-        }
 
-        private void OnKeyDown(object sender, KeyEventArgs e)
-        {
-            _sender.Send((int) e.Key);
-            e.Handled = true;
-        }
-
-        private void OnKeyUp(object sender, KeyEventArgs e)
-        {
-            _sender.Send(-(int) e.Key);
-            e.Handled = true;
+            _configuration.Running = false;
         }
     }
 }

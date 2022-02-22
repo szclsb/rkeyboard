@@ -2,41 +2,35 @@
 using System.Net;
 using System.Runtime.CompilerServices;
 
-namespace rkeyboard
-{
-    public enum Mode
-    {
+namespace rkeyboard {
+    public enum Mode {
         SEND,
         RECEIVE
     }
 
-    public class Configuration : INotifyPropertyChanged
-    {
+    public class Configuration : INotifyPropertyChanged {
         public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
+
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null) {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
 
         private bool _running;
-        
+
         public bool Running {
             get => _running;
-            set
-            {
+            set {
                 _running = value;
                 OnPropertyChanged();
             }
         }
-        
+
         private Mode? _mode;
 
-        public Mode? Mode
-        {
+        public Mode? Mode {
             get => _mode;
-            set
-            {
+            set {
                 _mode = value;
                 OnPropertyChanged();
             }
@@ -44,11 +38,9 @@ namespace rkeyboard
 
         private int? _port;
 
-        public int? Port
-        {
+        public int? Port {
             get => _port;
-            set
-            {
+            set {
                 _port = value;
                 OnPropertyChanged();
             }
@@ -56,11 +48,9 @@ namespace rkeyboard
 
         private string _ipAddress;
 
-        public string IpAddress
-        {
+        public string IpAddress {
             get => _ipAddress;
-            set
-            {
+            set {
                 _ipAddress = value;
                 OnPropertyChanged();
             }

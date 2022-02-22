@@ -131,7 +131,18 @@
                 </TextBox>
             </Grid>
         </StackPanel>
-        <Button DockPanel.Dock="Bottom" Click="OnStart">Start</Button>
+        <Button DockPanel.Dock="Bottom" Click="OnBtnPressed">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Setter Property="Content" Value="Start" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Running}" Value="True">
+                            <Setter Property="Content" Value="Stop"></Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+        </Button>
         <TextBox PreviewKeyDown="OnKeyDown" PreviewKeyUp="OnKeyUp">
             <TextBox.Style>
                 <Style TargetType="TextBox">
