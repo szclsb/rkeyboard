@@ -46,8 +46,7 @@ namespace rkeyboard {
         private void OnBtnPressed(object sender, RoutedEventArgs e) {
             if (!_configuration.Running) {
                 Start();
-            }
-            else {
+            } else {
                 Stop();
             }
         }
@@ -68,43 +67,58 @@ namespace rkeyboard {
             e.Handled = true;
         }
 
-        private void Start() {
-            switch (_configuration.Mode) {
-                case Mode.SEND: {
-                    _sender.Connect(_configuration.IpAddress, _configuration.Port.Value);
-                    break;
-                }
-                case Mode.RECEIVE: {
-                    _receiver.Listen(_configuration.Port.Value, key => {
-                        //FIXME
-                        MessageBox.Show(key.ToString());
-                    });
-                    break;
-                }
-                default: {
-                    throw new ArgumentException("Invalid mode");
-                }
+        private void ValidateElement(string name, string errorMessage) {
+            var obj = FindName("PortTextBox") as DependencyObject;
+            if (obj == null || Validation.GetHasError(obj)) {
+                throw new ArgumentException(errorMessage);
             }
+        }
 
-            _configuration.Running = true;
+        private void Start() {
+            try {
+                ValidateElement("PortTextBox", "Invalid port");
+                switch (_configuration.Mode) {
+                    case Mode.SEND: {
+                        ValidateElement("AddressTextBox", "Invalid address");
+                        _sender.Connect(_configuration.IpAddress, _configuration.Port.Value);
+                        break;
+                    }
+                    case Mode.RECEIVE: {
+                        _receiver.Listen(_configuration.Port.Value, key => {
+                            //FIXME
+                            MessageBox.Show(key.ToString());
+                        });
+                        break;
+                    }
+                    default: {
+                        throw new ArgumentException("Invalid mode");
+                    }
+                }
+                _configuration.Running = true;
+            } catch (Exception e) {
+                MessageBox.Show(e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void Stop() {
-            switch (_configuration.Mode) {
-                case Mode.SEND: {
-                    _sender.Disconnect();
-                    break;
+            try {
+                switch (_configuration.Mode) {
+                    case Mode.SEND: {
+                        _sender.Disconnect();
+                        break;
+                    }
+                    case Mode.RECEIVE: {
+                        _receiver.Stop();
+                        break;
+                    }
+                    default: {
+                        throw new ArgumentException("Invalid mode");
+                    }
                 }
-                case Mode.RECEIVE: {
-                    _receiver.Stop();
-                    break;
-                }
-                default: {
-                    throw new ArgumentException("Invalid mode");
-                }
+                _configuration.Running = false;
+            } catch (Exception e) {
+                MessageBox.Show(e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
-            _configuration.Running = false;
         }
     }
 }
