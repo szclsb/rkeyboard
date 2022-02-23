@@ -1,19 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using rkeyboard.WinUser;
 using InputType = rkeyboard.WinUser.InputType;
 
@@ -128,10 +117,9 @@ namespace rkeyboard {
             return new Input {
                 type = (uint) InputType.Keyboard,
                 input = new InputUnion {
-                    ki = new KeyboardInput() {
-                        wVk = 0,
-                        wScan = (ushort) key,
-                        dwFlags = (uint)(KeyEventFlags.KeyDown | KeyEventFlags.Scancode),
+                    ki = new KeyboardInput {
+                        wVk = (ushort) key,
+                        dwFlags = (uint) KeyEventFlags.KeyDown,
                         dwExtraInfo = WinInput.GetMessageExtraInfo()
                     }
                 }
@@ -142,10 +130,9 @@ namespace rkeyboard {
             return new Input {
                 type = (uint) InputType.Keyboard,
                 input = new InputUnion {
-                    ki = new KeyboardInput() {
-                        wVk = 0,
-                        wScan = (ushort) key,
-                        dwFlags = (uint)(KeyEventFlags.KeyUp | KeyEventFlags.Scancode),
+                    ki = new KeyboardInput {
+                        wVk = (ushort) key,
+                        dwFlags = (uint) KeyEventFlags.KeyUp,
                         dwExtraInfo = WinInput.GetMessageExtraInfo()
                     }
                 }
