@@ -1,26 +1,42 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Net.Sockets;
-using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace rkeyboard {
     public class Sender {
-        private UdpClient _client;
+        private CancellationTokenSource _tokenSource;
+        private BlockingCollection<int> _blockingCollection;
 
         public Sender() {
-            _client = new UdpClient();
+            _blockingCollection = new BlockingCollection<int>(255);
         }
 
         public void Connect(string host, int port) {
-            _client.Connect(host, port);
+            _tokenSource = new CancellationTokenSource();
+            var client = new TcpClient();
+            var bytes = new byte[4];
+            Task.Run(() => {
+                while (!_tokenSource.IsCancellationRequested) {
+                    client.Connect(host, port);
+                    var stream = client.GetStream();
+                    while (!_tokenSource.IsCancellationRequested) {
+                        var key = _blockingCollection.Take(_tokenSource.Token);
+                        bytes = BitConverter.GetBytes(key);
+                        stream.WriteAsync(bytes);
+                    }
+                    client.Close();
+                }
+            });
         }
 
         public void Disconnect() {
-            _client.Close();
+            _tokenSource.Cancel();
         }
 
         public void Send(int key) {
-            var bytes = BitConverter.GetBytes(key);
-            _client.SendAsync(bytes, bytes.Length);
+            _blockingCollection.TryAdd(key);
         }
     }
 }

@@ -1,42 +1,44 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace rkeyboard {
     public class Receiver {
-        private volatile UdpClient _client;
-        private Thread _thread;
+        private CancellationTokenSource _tokenSource;
 
         public void Listen(int port, Action<int> onReceive) {
-            _thread = new Thread(() => {
-                _client = new UdpClient(port);
-                var ep = new IPEndPoint(IPAddress.Any, port);
+            var localAddress = IPAddress.Parse("127.0.0.1");
+            var listener = new TcpListener(localAddress, port);
+            listener.Start();
+            _tokenSource = new CancellationTokenSource();
+            Task.Run(() => {
+                var bytes = new byte[4];
                 try {
-                    while (true) {
-                        var bytes = _client.Receive(ref ep);
-                        if (bytes == null || bytes.Length == 0) {
-                            return;
+                    while (!_tokenSource.IsCancellationRequested) {
+                        var client = listener.AcceptTcpClient();
+                        var stream = client.GetStream(); // use only one connection
+                        while (!_tokenSource.IsCancellationRequested) {
+                            var i = stream.ReadAsync(bytes, 0, bytes.Length, _tokenSource.Token)
+                                .GetAwaiter().GetResult();
+                            if (i != 0 && !_tokenSource.IsCancellationRequested) {
+                                var key = BitConverter.ToInt32(bytes, 0);
+                                Task.Run(() => onReceive?.Invoke(key));
+                            }
                         }
-
-                        var key = BitConverter.ToInt32(bytes, 0);
-                        onReceive?.Invoke(key);
+                        client.Close();
                     }
-                }
-                catch (SocketException e) {
+                } catch (SocketException e) {
                     Console.Error.WriteLine(e);
-                }
-                finally {
-                    _client.Close();
+                } finally {
+                    listener.Stop();
                 }
             });
-            _thread.Start();
         }
 
         public void Stop() {
-            _client?.Close();
-            _thread?.Join();
+            _tokenSource.Cancel();
         }
     }
 }
