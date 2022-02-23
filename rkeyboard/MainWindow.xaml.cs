@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -13,6 +14,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using rkeyboard.WinUser;
+using InputType = rkeyboard.WinUser.InputType;
 
 namespace rkeyboard {
     /// <summary>
@@ -58,17 +61,17 @@ namespace rkeyboard {
         }
 
         private void OnKeyDown(object sender, KeyEventArgs e) {
-            _sender.Send((int)e.Key);
+            _sender.Send(KeyInterop.VirtualKeyFromKey(e.Key));
             e.Handled = true;
         }
 
         private void OnKeyUp(object sender, KeyEventArgs e) {
-            _sender.Send(-(int)e.Key);
+            _sender.Send(-KeyInterop.VirtualKeyFromKey(e.Key));
             e.Handled = true;
         }
 
         private void ValidateElement(string name, string errorMessage) {
-            var obj = FindName("PortTextBox") as DependencyObject;
+            var obj = FindName(name) as DependencyObject;
             if (obj == null || Validation.GetHasError(obj)) {
                 throw new ArgumentException(errorMessage);
             }
@@ -85,8 +88,8 @@ namespace rkeyboard {
                     }
                     case Mode.RECEIVE: {
                         _receiver.Listen(_configuration.Port.Value, key => {
-                            //FIXME
-                            MessageBox.Show(key.ToString());
+                            var input = key > 0 ? CreateKeyDownInput(key) : CreateKeyUpInput(-key);
+                            WinInput.SendInput(1, new[] { input }, Marshal.SizeOf(typeof(Input)));
                         });
                         break;
                     }
@@ -119,6 +122,34 @@ namespace rkeyboard {
             } catch (Exception e) {
                 MessageBox.Show(e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private static Input CreateKeyDownInput(int key) {
+            return new Input {
+                type = (uint) InputType.Keyboard,
+                input = new InputUnion {
+                    ki = new KeyboardInput() {
+                        wVk = 0,
+                        wScan = (ushort) key,
+                        dwFlags = (uint)(KeyEventFlags.KeyDown | KeyEventFlags.Scancode),
+                        dwExtraInfo = WinInput.GetMessageExtraInfo()
+                    }
+                }
+            };
+        }
+        
+        private static Input CreateKeyUpInput(int key) {
+            return new Input {
+                type = (uint) InputType.Keyboard,
+                input = new InputUnion {
+                    ki = new KeyboardInput() {
+                        wVk = 0,
+                        wScan = (ushort) key,
+                        dwFlags = (uint)(KeyEventFlags.KeyUp | KeyEventFlags.Scancode),
+                        dwExtraInfo = WinInput.GetMessageExtraInfo()
+                    }
+                }
+            };
         }
     }
 }
