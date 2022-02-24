@@ -26,14 +26,13 @@ namespace rkeyboard {
                 }
             });
             Task.Run(() => {
-                var bytes = new byte[4];
                 try {
                     while (!_tokenSource.IsCancellationRequested) {
                         var client = listener.AcceptTcpClient();
+                        var bytes = new byte[4];
                         var stream = client.GetStream(); // use only one connection
                         _tokenSource.Token.Register(() => stream.Close());
-                        while (!_tokenSource.IsCancellationRequested) {
-                            stream.Read(bytes, 0, bytes.Length);
+                        while (stream.Read(bytes, 0, bytes.Length) != 0 && !_tokenSource.IsCancellationRequested) {
                             _blockingQueue.TryAdd(bytes);
                         }
                         client.Close();

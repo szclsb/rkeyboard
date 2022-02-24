@@ -24,7 +24,7 @@ namespace rkeyboard {
                         var stream = client.GetStream();
                         _tokenSource.Token.Register(() => stream.Close());
                         foreach (var bytes in _blockingQueue.GetConsumingEnumerable(_tokenSource.Token)) {
-                            stream.WriteAsync(bytes);
+                            stream.Write(bytes);
                         }
                     } catch (Exception e) {
                         Console.Error.WriteLine(e);
