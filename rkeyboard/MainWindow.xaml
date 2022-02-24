@@ -106,7 +106,7 @@
                                 <MultiDataTrigger>
                                     <MultiDataTrigger.Conditions>
                                         <Condition Binding="{Binding Path=Running}" Value="False" />
-                                        <Condition Binding="{Binding Path=Mode}" Value="SEND" />
+                                        <Condition Binding="{Binding Path=Mode}" Value="RECEIVE" />
                                     </MultiDataTrigger.Conditions>
                                     <MultiDataTrigger.Setters>
                                         <Setter Property="IsEnabled" Value="True"></Setter>

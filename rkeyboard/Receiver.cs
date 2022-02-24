@@ -1,51 +1,48 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace rkeyboard {
     public class Receiver {
+        private readonly BlockingCollection<int> _blockingQueue;
         private CancellationTokenSource _tokenSource;
-        private BlockingCollection<byte[]> _blockingQueue;
 
         public Receiver() {
-            _blockingQueue = new BlockingCollection<byte[]>(128);
+            _blockingQueue = new BlockingCollection<int>(128);
         }
 
-        public void Listen(int port, Action<int> onReceive) {
-            var localAddress = IPAddress.Any;
-            var listener = new TcpListener(localAddress, port);
-            listener.Start();
+        public void Connect(string host, int port, Action<int> onReceive) {
             _tokenSource = new CancellationTokenSource();
             Task.Run(() => {
-                foreach (var bytes in _blockingQueue.GetConsumingEnumerable(_tokenSource.Token)) {
-                    var key = BitConverter.ToInt32(bytes, 0);
+                foreach (var key in _blockingQueue.GetConsumingEnumerable(_tokenSource.Token)) {
                     onReceive?.Invoke(key);
                 }
             });
             Task.Run(() => {
-                try {
-                    while (!_tokenSource.IsCancellationRequested) {
-                        var client = listener.AcceptTcpClient();
-                        var bytes = new byte[4];
-                        var stream = client.GetStream(); // use only one connection
+                while (!_tokenSource.IsCancellationRequested) {
+                    var client = new TcpClient();
+                    try {
+                        client.Connect(host, port);
+                        using var stream = client.GetStream();
                         _tokenSource.Token.Register(() => stream.Close());
+                        var bytes = new byte[4];
                         while (stream.Read(bytes, 0, bytes.Length) != 0 && !_tokenSource.IsCancellationRequested) {
-                            _blockingQueue.TryAdd(bytes);
+                            var key = BitConverter.ToInt32(bytes, 0);
+                            _blockingQueue.TryAdd(key);
                         }
+                    } catch (Exception e) {
+                        Console.Error.WriteLine(e);
+                        Thread.Sleep(2000);
+                    } finally {
                         client.Close();
                     }
-                } catch (Exception e) {
-                    Console.Error.WriteLine(e);
-                } finally {
-                    listener.Stop();
                 }
             });
         }
 
-        public void Stop() {
+        public void Disconnect() {
             _tokenSource.Cancel();
         }
     }

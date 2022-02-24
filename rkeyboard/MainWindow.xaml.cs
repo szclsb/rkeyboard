@@ -75,14 +75,14 @@ namespace rkeyboard {
                 ValidateElement("PortTextBox", "Invalid port");
                 switch (_configuration.Mode) {
                     case Mode.SEND: {
-                        ValidateElement("AddressTextBox", "Invalid address");
-                        _sender.Connect(_configuration.IpAddress, _configuration.Port.Value);
+                        _sender.Listen(_configuration.Port.Value);
                         break;
                     }
                     case Mode.RECEIVE: {
-                        _receiver.Listen(_configuration.Port.Value, key => {
+                        ValidateElement("AddressTextBox", "Invalid address");
+                        _receiver.Connect(_configuration.IpAddress, _configuration.Port.Value, key => {
                             var input = key > 0 ? CreateKeyDownInput(key) : CreateKeyUpInput(-key);
-                            // MessageBox.Show(input.ToString());
+                            // MessageBox.Show(key.ToString());
                             WinInput.SendInput(1, new[] { input }, Marshal.SizeOf(typeof(Input)));
                         });
                         break;
@@ -101,11 +101,11 @@ namespace rkeyboard {
             try {
                 switch (_configuration.Mode) {
                     case Mode.SEND: {
-                        _sender.Disconnect();
+                        _sender.Stop();
                         break;
                     }
                     case Mode.RECEIVE: {
-                        _receiver.Stop();
+                        _receiver.Disconnect();
                         break;
                     }
                     default: {

@@ -1,48 +1,49 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
 
 namespace rkeyboard {
     public class Sender {
+        private readonly BlockingCollection<int> _blockingQueue;
         private CancellationTokenSource _tokenSource;
-        private BlockingCollection<byte[]> _blockingQueue;
 
         public Sender() {
-            _blockingQueue = new BlockingCollection<byte[]>(128);
+            _blockingQueue = new BlockingCollection<int>(128);
         }
 
-        public void Connect(string host, int port) {
+        public void Listen(int port) {
+            var localAddress = IPAddress.Any;
+            var listener = new TcpListener(localAddress, port);
+            listener.Start();
             _tokenSource = new CancellationTokenSource();
             Task.Run(() => {
-                while (!_tokenSource.IsCancellationRequested) {
-                    var client = new TcpClient();
-                    try {
-                        client.Connect(host, port);
-                        var stream = client.GetStream();
+                try {
+                    while (!_tokenSource.IsCancellationRequested) {
+                        using var client = listener.AcceptTcpClient();
+                        using var stream = client.GetStream();
                         _tokenSource.Token.Register(() => stream.Close());
-                        foreach (var bytes in _blockingQueue.GetConsumingEnumerable(_tokenSource.Token)) {
+                        foreach (var key in _blockingQueue.GetConsumingEnumerable(_tokenSource.Token)) {
+                            var bytes = BitConverter.GetBytes(key);
                             stream.Write(bytes);
                         }
-                    } catch (Exception e) {
-                        Console.Error.WriteLine(e);
-                        Thread.Sleep(2000);
-                    } finally {
-                        client.Close();
                     }
+                } catch (Exception e) {
+                    Console.Error.WriteLine(e);
+                } finally {
+                    listener.Stop();
                 }
             });
         }
 
-        public void Disconnect() {
+        public void Stop() {
             _tokenSource.Cancel();
         }
 
         public void Send(int key) {
-            var bytes = BitConverter.GetBytes(key);
-            _blockingQueue.TryAdd(bytes);
+            _blockingQueue.TryAdd(key);
         }
     }
 }
