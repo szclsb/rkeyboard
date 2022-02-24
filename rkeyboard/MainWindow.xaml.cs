@@ -51,20 +51,15 @@ namespace rkeyboard {
 
         private void OnKeyDown(object sender, KeyEventArgs e) {
             var vKey = KeyInterop.VirtualKeyFromKey(e.Key);
-            MessageBox.Show(vKey.ToString());
-            // _sender.Send(vKey);
-            e.Handled = true;
-        }
-        
-        private void OnKeyDown2(object sender, KeyEventArgs e) {
-            var vKey = KeyInterop.VirtualKeyFromKey(e.Key);
-            MessageBox.Show(vKey.ToString());
-            // _sender.Send(vKey);
+            // MessageBox.Show(vKey.ToString());
+            _sender.Send(vKey);
             e.Handled = true;
         }
 
         private void OnKeyUp(object sender, KeyEventArgs e) {
-            _sender.Send(-KeyInterop.VirtualKeyFromKey(e.Key));
+            var vKey = KeyInterop.VirtualKeyFromKey(e.Key);
+            // MessageBox.Show(vKey.ToString());
+            _sender.Send(-vKey);
             e.Handled = true;
         }
 

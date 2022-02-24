@@ -19,20 +19,27 @@ namespace rkeyboard {
             var bytes = new byte[4];
             Task.Run(() => {
                 while (!_tokenSource.IsCancellationRequested) {
-                    client.Connect(host, port);
-                    var stream = client.GetStream();
-                    while (!_tokenSource.IsCancellationRequested) {
-                        var key = _blockingCollection.Take(_tokenSource.Token);
-                        bytes = BitConverter.GetBytes(key);
-                        stream.WriteAsync(bytes);
+                    try {
+                        client.Connect(host, port);
+                        var stream = client.GetStream();
+                        while (!_tokenSource.IsCancellationRequested) {
+                            var key = _blockingCollection.Take(_tokenSource.Token);
+                            bytes = BitConverter.GetBytes(key);
+                            stream.WriteAsync(bytes);
+                        }
+                    } catch (Exception e) {
+                        
+                    } finally {
+                        client.Close();
                     }
-                    client.Close();
                 }
             });
         }
 
         public void Disconnect() {
             _tokenSource.Cancel();
+            while (_blockingCollection.TryTake(out _)) {
+            }
         }
 
         public void Send(int key) {
