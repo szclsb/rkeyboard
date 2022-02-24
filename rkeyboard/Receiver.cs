@@ -15,7 +15,7 @@ namespace rkeyboard {
         }
 
         public void Listen(int port, Action<int> onReceive) {
-            var localAddress = IPAddress.Parse("127.0.0.1");
+            var localAddress = IPAddress.Any;
             var listener = new TcpListener(localAddress, port);
             listener.Start();
             _tokenSource = new CancellationTokenSource();

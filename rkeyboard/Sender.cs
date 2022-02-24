@@ -28,6 +28,7 @@ namespace rkeyboard {
                         }
                     } catch (Exception e) {
                         Console.Error.WriteLine(e);
+                        Thread.Sleep(2000);
                     } finally {
                         client.Close();
                     }
