@@ -3,32 +3,31 @@ using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 namespace rkeyboard {
     public class Sender {
         private CancellationTokenSource _tokenSource;
-        private BlockingCollection<int> _blockingCollection;
+        private BlockingCollection<byte[]> _blockingQueue;
 
         public Sender() {
-            _blockingCollection = new BlockingCollection<int>(255);
+            _blockingQueue = new BlockingCollection<byte[]>(128);
         }
 
         public void Connect(string host, int port) {
             _tokenSource = new CancellationTokenSource();
-            var client = new TcpClient();
-            var bytes = new byte[4];
             Task.Run(() => {
                 while (!_tokenSource.IsCancellationRequested) {
+                    var client = new TcpClient();
                     try {
                         client.Connect(host, port);
                         var stream = client.GetStream();
-                        while (!_tokenSource.IsCancellationRequested) {
-                            var key = _blockingCollection.Take(_tokenSource.Token);
-                            bytes = BitConverter.GetBytes(key);
+                        _tokenSource.Token.Register(() => stream.Close());
+                        foreach (var bytes in _blockingQueue.GetConsumingEnumerable(_tokenSource.Token)) {
                             stream.WriteAsync(bytes);
                         }
                     } catch (Exception e) {
-                        
+                        Console.Error.WriteLine(e);
                     } finally {
                         client.Close();
                     }
@@ -38,12 +37,11 @@ namespace rkeyboard {
 
         public void Disconnect() {
             _tokenSource.Cancel();
-            while (_blockingCollection.TryTake(out _)) {
-            }
         }
 
         public void Send(int key) {
-            _blockingCollection.TryAdd(key);
+            var bytes = BitConverter.GetBytes(key);
+            _blockingQueue.TryAdd(bytes);
         }
     }
 }
