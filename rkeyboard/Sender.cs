@@ -2,8 +2,10 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using rkeyboard.WinHook;
 
 namespace rkeyboard {
     public class Sender {

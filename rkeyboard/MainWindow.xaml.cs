@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using rkeyboard.WinHook;
 using rkeyboard.WinUser;
 using InputType = rkeyboard.WinUser.InputType;
 
@@ -14,6 +15,7 @@ namespace rkeyboard {
         private Configuration _configuration;
         private Receiver _receiver;
         private Sender _sender;
+        private IntPtr _hook;
 
         public MainWindow() {
             InitializeComponent();
@@ -47,20 +49,6 @@ namespace rkeyboard {
             if (_configuration.Running) {
                 Stop();
             }
-        }
-
-        private void OnKeyDown(object sender, KeyEventArgs e) {
-            var vKey = KeyInterop.VirtualKeyFromKey(e.Key);
-            // MessageBox.Show(vKey.ToString());
-            _sender.Send(vKey);
-            e.Handled = true;
-        }
-
-        private void OnKeyUp(object sender, KeyEventArgs e) {
-            var vKey = KeyInterop.VirtualKeyFromKey(e.Key);
-            // MessageBox.Show(vKey.ToString());
-            _sender.Send(-vKey);
-            e.Handled = true;
         }
 
         private void ValidateElement(string name, string errorMessage) {
@@ -142,6 +130,27 @@ namespace rkeyboard {
                     }
                 }
             };
+        }
+        
+        private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam) {
+            if (nCode >= 0) {
+                var key = Marshal.ReadInt32(lParam);
+                if (wParam == (IntPtr) Interceptor.KEY_DOWN || wParam == (IntPtr) Interceptor.WM_SYSKEY_DOWN) {
+                    _sender.Send(key);
+                } else if (wParam == (IntPtr) Interceptor.KEY_UP || wParam == (IntPtr) Interceptor.WM_SYSKEY_UP) {
+                    _sender.Send(-key);
+                }
+            }
+            // return Interceptor.CallNextHookEx(_hook, nCode, wParam, lParam);
+            return (IntPtr) 1;
+        }
+
+        private void OnGotFocus(object sender, RoutedEventArgs e) {
+            _hook = Interceptor.InstallHook(HookCallback);
+        }
+        
+        private void OnLostFocus(object sender, RoutedEventArgs e) {
+            Interceptor.UninstallHook(_hook);
         }
     }
 }
