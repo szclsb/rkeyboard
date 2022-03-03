@@ -64,6 +64,7 @@ namespace rkeyboard {
                 switch (_configuration.Mode) {
                     case Mode.SEND: {
                         _sender.Listen(_configuration.Port.Value);
+                        _hook = Interceptor.InstallHook(HookCallback);
                         break;
                     }
                     case Mode.RECEIVE: {
@@ -89,6 +90,7 @@ namespace rkeyboard {
             try {
                 switch (_configuration.Mode) {
                     case Mode.SEND: {
+                        Interceptor.UninstallHook(_hook);
                         _sender.Stop();
                         break;
                     }
@@ -145,12 +147,16 @@ namespace rkeyboard {
             return (IntPtr) 1;
         }
 
-        private void OnGotFocus(object sender, RoutedEventArgs e) {
-            _hook = Interceptor.InstallHook(HookCallback);
+        private void OnWindowDeactivated(object? sender, EventArgs e) {
+            if (_sender.Running()) {
+                Interceptor.UninstallHook(_hook);
+            }
         }
-        
-        private void OnLostFocus(object sender, RoutedEventArgs e) {
-            Interceptor.UninstallHook(_hook);
+
+        private void OnWindowActivated(object? sender, EventArgs e) {
+            if (_sender.Running()) {
+                _hook = Interceptor.InstallHook(HookCallback);
+            }
         }
     }
 }
