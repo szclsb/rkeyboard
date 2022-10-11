@@ -3,35 +3,18 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using rkeyboard.WinUser;
 
-namespace rkeyboard {
-    public class Keyboard {
-        public static void SendKeyDown(int vkey) {
-            var input = new Input {
-                type = (uint) InputType.Keyboard,
-                input = new InputUnion {
-                    ki = new KeyboardInput {
-                        wVk = (ushort) vkey,
-                        dwFlags = (uint) KeyEventFlags.KeyDown,
-                        dwExtraInfo = GetMessageExtraInfo()
-                    }
+namespace rkeyboard.Input {
+    public class Keyboard : IKeyboard {
+        private static WinUser.Input CreateInput(KeyEventFlags eventFlags, int vkey) => new() {
+            type = (uint) InputType.Keyboard,
+            input = new InputUnion {
+                ki = new KeyboardInput {
+                    wVk = (ushort) vkey,
+                    dwFlags = (uint) KeyEventFlags.KeyDown,
+                    dwExtraInfo = GetMessageExtraInfo()
                 }
-            };
-            SendInput(1, new[] { input }, Marshal.SizeOf(typeof(Input)));
-        }
-        
-        public static void SendKeyUp(int vkey) {
-            var input = new Input {
-                type = (uint) InputType.Keyboard,
-                input = new InputUnion {
-                    ki = new KeyboardInput {
-                        wVk = (ushort) vkey,
-                        dwFlags = (uint) KeyEventFlags.KeyUp,
-                        dwExtraInfo = GetMessageExtraInfo()
-                    }
-                }
-            };
-            SendInput(1, new[] { input }, Marshal.SizeOf(typeof(Input)));
-        }
+            }
+        };
 
         private const int WH_KEYBOARD_LL = 13;
         private const int KEY_DOWN = 0x0100;
@@ -41,7 +24,7 @@ namespace rkeyboard {
 
         private LowLevelKeyboardProc _proc;
         private IntPtr _hook;
-        private IntPtr _pause;
+        private bool _pause;
         private Action<int> _onKeyDown;
         private Action<int> _onKeyUp;
 
@@ -49,7 +32,7 @@ namespace rkeyboard {
             _onKeyDown = onKeyDown;
             _onKeyUp = onKeyUp;
             _proc = (nCode, wParam, lParam) => {
-                if (_pause.ToInt32() == 0) {
+                if (_pause) {
                     if (nCode >= 0) {
                         var key = Marshal.ReadInt32(lParam);
                         if (wParam == (IntPtr)KEY_DOWN || wParam == (IntPtr)WM_SYSKEY_DOWN) {
@@ -62,6 +45,16 @@ namespace rkeyboard {
                 }
                 return CallNextHookEx(_hook, nCode, wParam, lParam);
             };
+        }
+        
+        public void EmulateKeyDown(int vkey) {
+            var input = CreateInput(KeyEventFlags.KeyDown, vkey);
+            SendInput(1, new[] { input }, Marshal.SizeOf(typeof(WinUser.Input)));
+        }
+        
+        public void EmulateKeyUp(int vkey) {
+            var input = CreateInput(KeyEventFlags.KeyUp, vkey);
+            SendInput(1, new[] { input }, Marshal.SizeOf(typeof(WinUser.Input)));
         }
 
         public void StartScan() {
@@ -76,11 +69,11 @@ namespace rkeyboard {
         }
 
         public void PauseScan() {
-            _pause = (IntPtr)1;
+            _pause = true;
         }
         
         public void ResumeScan() {
-            _pause = IntPtr.Zero;
+            _pause = false;
         }
 
         private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
@@ -99,7 +92,7 @@ namespace rkeyboard {
         private static extern IntPtr GetModuleHandle(string lpModuleName);
         
         [DllImport("user32.dll", SetLastError = true)]
-        private static extern uint SendInput(uint nInputs, Input[] pInputs, int cbSize);
+        private static extern uint SendInput(uint nInputs, WinUser.Input[] pInputs, int cbSize);
         
         [DllImport("user32.dll")]
         private static extern IntPtr GetMessageExtraInfo();
